@@ -1,0 +1,40 @@
+version: "3"
+services:
+  reverseproxy:
+      image: welldone90/reverseproxy
+      ports:
+          - 8080:8080
+      restart: always
+      depends_on:
+        - backend-user
+        - backend-feed     
+  backend-user:
+    image: welldone90/udacity-restapi-user
+    environment:
+      POSTGRESS_USERNAME: $POSTGRESS_USERNAME
+      POSTGREESS_PASSWORD: $POSTGREESS_PASSWORD 
+      POSTGREESS_DATABASE: $POSTGREESS_DATABASE 
+      POSTGREESS_HOST: $POSTGREESS_HOST 
+      AWS_REGION: $AWS_REGION 
+      AWS_PROFILE: $AWS_PROFILE 
+      AWS_MEDIA_BUCKET: $AWS_MEDIA_BUCKET
+      JWT_SECRET: $JWT_SECRET
+      URL: "http://localhost:8100"
+  backend-feed:
+    image: welldone90/udacity-restapi-feed
+    volumes:
+      - $HOME/.aws:/root/.aws
+    environment:
+      POSTGRESS_USERNAME: $POSTGRESS_USERNAME
+      POSTGREESS_PASSWORD: $POSTGREESS_PASSWORD 
+      POSTGREESS_DATABASE: $POSTGREESS_DATABASE 
+      POSTGREESS_HOST: $POSTGREESS_HOST 
+      AWS_REGION: $AWS_REGION 
+      AWS_PROFILE: $AWS_PROFILE 
+      AWS_MEDIA_BUCKET: $AWS_MEDIA_BUCKET
+      JWT_SECRET: $JWT_SECRET
+      URL: "http://localhost:8100"
+  frontend:
+    image: welldone90/udacity-frontend
+    ports:
+      - "8100:80"
