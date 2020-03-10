@@ -1,0 +1,62 @@
+Link to my GitHub repo: https://github.com/WellDone90/Udacity_course3
+
+1.Clone my GitHub repository using:
+	- git clone https://github.com/WellDone90/Udacity_course3
+	- cd Udacity_course3
+	- git branch
+
+2.Set up ur User specific environment variables:
+	- open the .profile file and set all environment variables used in config.ts:
+		- code ~/.profile
+
+3.npm install all the microservices:
+	- switch to udacity-c3-restapi-feed and use npm i
+	- switch to udacity-c3-restapi-user and use npm i
+	- switch to udacity-c3-frontend and use npm i
+
+If you try to npm run all the microservices at the same time you will run into trouble, because only one service can run locally on your localhost. 
+Thats why we will use docker and kubernetes.
+
+4. Create Docker images:
+	- docker build -t <your-dockerhub-username>/__name_feed__ .
+	- docker build -t <your-dockerhub-username>/__name_user__ .
+	- docker build -t <your-dockerhub-username>/__name_frontend__ .
+	- docker build -t <your-dockerhub-username>/__reverseproxy__ .
+	- NOTE: do not foget the . an the end
+
+We are using Docker container to make sure we are able to run all our microservices at the same time. 
+A docker container is a VM and provides the solution to run multible VMs at the same time.
+This will make us able to run feed and user at the same time so we can use all our features at http://localhost:8100 
+
+5. Create and Run the containers for all images and use docker to deploy the application:
+	- docker run --rm --publish 8080:8080 -v $HOME/.aws:/root/.aws --env POSTGREESS_HOST=$POSTGREESS_HOST --env POSTGRESS_USERNAME=$POSTGRESS_USERNAME --env POSTGREESS_PASSWORD=$POSTGREESS_PASSWORD --env POSTGREESS_DATABASE=$POSTGREESS_DATABASE --env AWS_REGION=$AWS_REGION --env AWS_PROFILE=$AWS_PROFILE --env AWS_MEDIA_BUCKET=$AWS_MEDIA_BUCKET --env JWT_SECRET=$JWT_SECRET --name <your-dockerhub-username>/__name_feed__
+	- use docker compose 
+		- docker-dompose up
+	- try http://localhost:8100
+
+6. Create Kubernetes Cluster
+	- follow the instructions here to setup infrastructure and install kubernetes on an AWS Cluster: https://github.com/kubermatic/kubeone/blob/master/docs/quickstart-aws.md
+	- copy the <cluster-name>_kubeconfig file into ~/.kube/config
+	- check if your nodes are created 
+		- kubectl get nodes
+
+Now we will run our microservices on an AWS EC2 instance using kubernetes. 
+We will use multiple replicas for each microservice to prevent heavy load on one pod.
+Kubernetes automatically will handle huge load trough the implemented leadbalancer.
+
+7. Deploy the Pods and ReplicaSets:
+	- kubectl apply -f aws-secret.yaml
+	- kubectl apply -f env-configmap.yaml
+	- kubectl apply -f env-secret.yaml
+	- kubectl apply -f backend-feed-service.yaml
+	- kubectl apply -f backend-user-service.yaml
+	- kubectl apply -f frontend-service.yaml
+	- kubectl apply -f reverseproxy-service.yaml
+	- kubectl apply -f backend-feed-deployment.yaml
+	- kubectl apply -f backend-user-deployment.yaml
+	- kubectl apply -f frontend-deployment.yaml
+	- kubectl apply -f reverseproxy-deployment.yaml
+	- use kubectl get pod -o wide and make sure all pods and READY 1/1
+
+You can easily scale ur replicas to prevent even more load using for example:
+	- kubectl scale deployment/backend-user --replicas=10
